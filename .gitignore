@@ -71,6 +71,9 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Local docs
+docs/
+
 # PyBuilder
 .pybuilder/
 target/
@@ -146,6 +149,12 @@ activemq-data/
 
 # SageMath parsed files
 *.sage.py
+
+# Downloaded datasets
+data/
+
+# Saved model weights
+*.pth
 
 # Environments
 .env
