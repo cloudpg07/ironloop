@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Neural Network Knowledge Check</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2e3245;
+    --accent: #5c7cfa;
+    --accent-dim: #3a4fa0;
+    --green: #37b679;
+    --red: #e05260;
+    --yellow: #f5a623;
+    --text: #e2e5f1;
+    --muted: #7a80a0;
+    --code-bg: #12151f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 24px;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .progress-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.35s ease;
+  }
+
+  /* Score chips */
+  .score-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .chip {
+    padding: 4px 14px;
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1px solid;
+  }
+
+  .chip.correct { border-color: var(--green); color: var(--green); background: rgba(55,182,121,0.08); }
+  .chip.wrong   { border-color: var(--red);   color: var(--red);   background: rgba(224,82,96,0.08); }
+  .chip.total   { border-color: var(--border); color: var(--muted); background: transparent; }
+
+  /* Card */
+  .card {
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+
+  .topic-tag {
+    display: inline-block;
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(92,124,250,0.12);
+    border: 1px solid rgba(92,124,250,0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-bottom: 14px;
+  }
+
+  .question-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    line-height: 1.55;
+  }
+
+  code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.88em;
+    color: #a8b4ff;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 10px 0 18px;
+    color: #a8b4ff;
+  }
+
+  /* Options */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 0.93rem;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    line-height: 1.5;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent-dim);
+    background: rgba(92,124,250,0.07);
+  }
+
+  .option-btn .letter {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .option-btn.selected { border-color: var(--accent); background: rgba(92,124,250,0.1); }
+  .option-btn.selected .letter { border-color: var(--accent); color: var(--accent); }
+
+  .option-btn.correct-ans { border-color: var(--green); background: rgba(55,182,121,0.1); }
+  .option-btn.correct-ans .letter { border-color: var(--green); color: var(--green); background: rgba(55,182,121,0.2); }
+
+  .option-btn.wrong-ans { border-color: var(--red); background: rgba(224,82,96,0.1); }
+  .option-btn.wrong-ans .letter { border-color: var(--red); color: var(--red); background: rgba(224,82,96,0.2); }
+
+  .option-btn:disabled { cursor: default; }
+
+  /* Explanation panel */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
+    background: rgba(92,124,250,0.06);
+    font-size: 0.9rem;
+    line-height: 1.65;
+    display: none;
+  }
+
+  .explanation.show { display: block; }
+
+  .explanation strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .explanation.correct-exp { border-color: var(--green); background: rgba(55,182,121,0.06); }
+  .explanation.correct-exp strong { color: var(--green); }
+
+  .explanation.wrong-exp { border-color: var(--red); background: rgba(224,82,96,0.06); }
+  .explanation.wrong-exp strong { color: var(--red); }
+
+  /* Nav buttons */
+  .nav-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn {
+    padding: 10px 24px;
+    border-radius: 9px;
+    border: none;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn:disabled { opacity: 0.35; cursor: default; }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn-secondary:hover:not(:disabled) { opacity: 0.8; }
+
+  /* Results screen */
+  #results-screen {
+    width: 100%;
+    max-width: 720px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  #results-screen.show { display: flex; }
+
+  .result-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    background: rgba(92,124,250,0.08);
+  }
+
+  .result-score {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .result-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .result-msg {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .result-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 28px;
+  }
+
+  /* breakdown table */
+  .breakdown {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+
+  .breakdown-row:last-child { border-bottom: none; }
+
+  .bd-icon { font-size: 1rem; flex-shrink: 0; }
+  .bd-q { flex: 1; color: var(--muted); }
+  .bd-tag { font-size: 0.72rem; font-weight: 700; color: var(--accent); text-transform: uppercase; flex-shrink: 0; }
+
+  /* Intro screen */
+  #intro-screen {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .intro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .topic-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 16px 0 0;
+  }
+
+  .topic-pill {
+    background: rgba(92,124,250,0.1);
+    border: 1px solid rgba(92,124,250,0.25);
+    color: var(--accent);
+    border-radius: 99px;
+    padding: 4px 14px;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<h1>Neural Network Knowledge Check</h1>
+<p class="subtitle">MLP · CNN · Training Loop · MNIST — based on your ironloop project</p>
+
+<!-- Intro Screen -->
+<div id="intro-screen">
+  <div class="intro-card">
+    <p style="font-size:1.05rem; margin-bottom:16px;">
+      15 questions covering what you built. Each question shows the explanation immediately after you answer — right or wrong.
+    </p>
+    <div class="topic-list">
+      <span class="topic-pill">Tensors & Data</span>
+      <span class="topic-pill">MLP Architecture</span>
+      <span class="topic-pill">CNN Architecture</span>
+      <span class="topic-pill">Training Loop</span>
+      <span class="topic-pill">Loss & Optimizers</span>
+      <span class="topic-pill">Evaluation</span>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="startQuiz()">Start Quiz</button>
+</div>
+
+<!-- Quiz Screen -->
+<div id="quiz-screen" style="display:none; width:100%; max-width:720px;">
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="q-counter">Question 1 of 15</span>
+      <span id="pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="score-row">
+    <span class="chip correct" id="chip-correct">✓ 0</span>
+    <span class="chip wrong"   id="chip-wrong">✗ 0</span>
+    <span class="chip total"   id="chip-remaining">15 left</span>
+  </div>
+
+  <div class="card" id="q-card">
+    <div class="topic-tag" id="q-topic"></div>
+    <div class="question-text" id="q-text"></div>
+    <div class="options" id="q-options"></div>
+    <div class="explanation" id="q-explanation"></div>
+    <div class="nav-row">
+      <button class="btn btn-primary"   id="btn-next" onclick="nextQuestion()" disabled>Next →</button>
+      <button class="btn btn-secondary" id="btn-restart" onclick="restartQuiz()" style="display:none">Restart</button>
+    </div>
+  </div>
+</div>
+
+<!-- Results Screen -->
+<div id="results-screen">
+  <div class="result-circle">
+    <div class="result-score" id="final-score"></div>
+    <div class="result-label">correct</div>
+  </div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="result-sub" id="result-sub"></div>
+  <div class="breakdown" id="breakdown"></div>
+  <button class="btn btn-primary" onclick="restartQuiz()">Try Again</button>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    topic: "Tensors & Data",
+    q: "MNIST images enter the network as tensors. What is the shape of a single batch of 64 images as it comes out of <code>DataLoader</code>?",
+    options: [
+      "(64, 784)",
+      "(64, 1, 28, 28)",
+      "(1, 28, 28, 64)",
+      "(64, 28, 28)"
+    ],
+    answer: 1,
+    explanation: "<strong>Correct shape: (64, 1, 28, 28).</strong> The four dimensions are (batch_size, channels, height, width). MNIST is greyscale so channels = 1. The MLP's <code>nn.Flatten()</code> then collapses the last three dims into 784 = 1 × 28 × 28. The CNN keeps the spatial structure intact and operates directly on the 28 × 28 grid."
+  },
+  {
+    topic: "Data",
+    q: "In <code>data.py</code> the images are normalized with <code>Normalize((0.1307,), (0.3081,))</code>. Why normalize at all?",
+    options: [
+      "To compress file size on disk",
+      "To make pixel values integers so PyTorch can process them",
+      "To centre the data near 0, which helps gradients flow more stably and speeds up training",
+      "To convert greyscale to RGB"
+    ],
+    answer: 2,
+    explanation: "<strong>Normalization centres and scales the data.</strong> Raw pixel values sit in [0, 1] after <code>ToTensor()</code>. Subtracting the dataset mean (0.1307) and dividing by the std (0.3081) shifts values to roughly [−0.5, 2.0], centred near 0. This keeps activations and gradients in a healthy range so the optimizer doesn't have to compensate for wildly unequal input scales."
+  },
+  {
+    topic: "Training Loop",
+    q: "Every iteration of the training loop calls <code>optimizer.zero_grad()</code> first. What happens if you forget this step?",
+    options: [
+      "The model weights are reset to random values",
+      "Gradients from previous batches accumulate, making weight updates too large and destabilizing training",
+      "Nothing — PyTorch resets gradients automatically",
+      "The loss function raises an error"
+    ],
+    answer: 1,
+    explanation: "<strong>PyTorch accumulates gradients by default — it does NOT reset them.</strong> If you skip <code>zero_grad()</code>, the <code>.grad</code> tensors keep adding up across batches. The optimizer then takes a step based on a sum of many past gradients rather than the current batch, causing erratic and usually much larger updates. The loop in your <code>train.py</code> calls it as the very first step: zero → forward → loss → backward → step."
+  },
+  {
+    topic: "Training Loop",
+    q: "Which of the following correctly describes the order of the five steps inside your training loop?",
+    options: [
+      "forward → loss → zero_grad → backward → step",
+      "zero_grad → forward → loss → backward → step",
+      "backward → zero_grad → forward → loss → step",
+      "forward → backward → zero_grad → loss → step"
+    ],
+    answer: 1,
+    explanation: "<strong>zero_grad → forward → loss → backward → step</strong> is the canonical PyTorch training loop. Clear old gradients first so they don't accumulate (zero_grad), run the model to get predictions (forward), measure error (loss), compute gradients via autograd (backward), then apply the weight update (step). Changing this order breaks the math."
+  },
+  {
+    topic: "MLP Architecture",
+    q: "The MLP's first <code>nn.Linear</code> is <code>Linear(784, 128)</code>. Where does 784 come from?",
+    options: [
+      "The number of training samples divided by the batch size",
+      "28 × 28 — the total pixels per MNIST image after flattening",
+      "The default hidden layer size in PyTorch",
+      "64 × 12 — batch size times a scaling factor"
+    ],
+    answer: 1,
+    explanation: "<strong>784 = 28 × 28.</strong> <code>nn.Flatten()</code> collapses the (1, 28, 28) tensor into a single 784-element vector. The Linear layer then learns a weight matrix of shape (784, 128) — every input pixel connects to every hidden neuron. The output of <code>Linear(784, 128)</code> is a (batch, 128) tensor."
+  },
+  {
+    topic: "MLP Architecture",
+    q: "Why does the MLP (and CNN) output raw logits rather than probabilities? Why not add <code>nn.Softmax()</code> at the end?",
+    options: [
+      "Softmax makes the output harder to interpret",
+      "PyTorch's CrossEntropyLoss applies log-softmax internally; adding softmax again distorts the loss calculation",
+      "Logits train faster because they have larger magnitudes",
+      "Softmax only works for binary classification"
+    ],
+    answer: 1,
+    explanation: "<strong>CrossEntropyLoss = LogSoftmax + NLLLoss in one step.</strong> If you add a softmax layer to the model output and then pass it to CrossEntropyLoss, you're applying softmax twice — once in the model and once inside the loss. This compresses all values toward 0 and 1, making the log inside NLLLoss numerically unstable and producing wrong gradients. Your <code>model.py</code> comments explicitly call this out: <em>'The loss function (CrossEntropyLoss) applies softmax internally, so we must NOT add softmax here or the math breaks.'</em>"
+  },
+  {
+    topic: "MLP Architecture",
+    q: "What is the role of <code>nn.ReLU()</code> between the two Linear layers in the MLP?",
+    options: [
+      "It normalizes the outputs to sum to 1",
+      "It introduces non-linearity so the network can learn patterns beyond simple linear mappings",
+      "It prevents overfitting by dropping random neurons",
+      "It converts logits to probabilities"
+    ],
+    answer: 1,
+    explanation: "<strong>ReLU is the non-linearity that lets deep networks learn complex functions.</strong> Without it, stacking two Linear layers is mathematically equivalent to a single Linear layer (matrix multiplication is associative). ReLU sets all negative values to 0 and passes positives unchanged — a cheap, effective way to break linearity. Without any activation function, no matter how many layers you add, the whole network collapses to one linear transformation."
+  },
+  {
+    topic: "CNN Architecture",
+    q: "The CNN's first <code>Conv2d(1, 32, kernel_size=3, padding=1)</code> produces 32 output channels. What does each of those 32 channels represent?",
+    options: [
+      "32 copies of the original image at different resolutions",
+      "32 different learned filters — each detecting a different local pattern like edges or curves",
+      "The 32 most important pixels selected from the 28×28 image",
+      "The output of 32 fully-connected neurons"
+    ],
+    answer: 1,
+    explanation: "<strong>Each output channel is the response of one learned filter across the entire image.</strong> The convolution slides a 3×3 filter over every position in the input. Filter 1 might activate strongly on horizontal edges, filter 2 on vertical edges, filter 3 on curves, etc. The network learns all 32 filters automatically from the data. This is fundamentally different from the MLP: the CNN detects patterns <em>regardless of where they appear</em> in the image (translation equivariance)."
+  },
+  {
+    topic: "CNN Architecture",
+    q: "After the two <code>MaxPool2d(2)</code> layers, the CNN flattens to <code>64 * 7 * 7 = 3136</code>. Trace how 28×28 becomes 7×7.",
+    options: [
+      "Conv block 1 halves to 14×14, Conv block 2 halves to 7×7",
+      "Each Conv2d with padding=1 halves the spatial size",
+      "The flatten layer halves the size twice automatically",
+      "28 − 7 − 7 = 14, then 14 / 2 = 7"
+    ],
+    answer: 0,
+    explanation: "<strong>MaxPool2d(2) halves each spatial dimension.</strong> Conv block 1: Conv2d with padding=1 keeps size at 28×28 → MaxPool2d(2) → 14×14. Conv block 2: Conv2d with padding=1 keeps size at 14×14 → MaxPool2d(2) → 7×7. The 64 comes from <code>out_channels=64</code> in the second Conv2d. So 64 feature maps × 7 × 7 = 3136 values get flattened before the classifier."
+  },
+  {
+    topic: "CNN Architecture",
+    q: "Why does the CNN outperform the MLP on MNIST even though both use the same training loop and loss function?",
+    options: [
+      "The CNN has more total parameters, so it memorizes more",
+      "CNNs use a different optimizer that converges faster",
+      "CNNs detect local spatial patterns and share weights across positions — they exploit the structure of images, which MLPs ignore by flattening first",
+      "The CNN skips backpropagation, which makes it more accurate"
+    ],
+    answer: 2,
+    explanation: "<strong>CNNs are built for image structure; MLPs are not.</strong> When the MLP flattens a 28×28 image into 784 numbers, it loses all spatial relationships — pixel (5, 10) has no special connection to pixel (5, 11). CNNs preserve the 2D grid and learn filters that detect local patterns (edges, curves) at any position, sharing weights across the image. This inductive bias, combined with far fewer parameters per layer, is why the CNN reaches ~99% accuracy while the MLP tops out around 97–98%."
+  },
+  {
+    topic: "Loss & Optimizers",
+    q: "Your MLP uses <code>SGD(lr=0.01, momentum=0.9)</code> while the CNN uses <code>Adam(lr=0.001)</code>. What is momentum doing in the SGD case?",
+    options: [
+      "It randomly skips some gradient updates to prevent overfitting",
+      "It keeps a running average of past gradient directions so updates are smoother and can escape flat regions faster",
+      "It increases the learning rate when loss plateaus",
+      "It clips gradients to prevent exploding values"
+    ],
+    answer: 1,
+    explanation: "<strong>Momentum smooths the update direction.</strong> Plain SGD moves purely in the direction of the current gradient — which can oscillate or get stuck. Momentum (0.9 here) adds 90% of the previous update direction to the current gradient. Think of it like a ball rolling downhill: it builds up speed in consistent directions and dampens oscillations. Adam achieves something similar automatically (plus per-parameter learning rate scaling), which is why it needs less tuning and is the default choice for CNNs."
+  },
+  {
+    topic: "Loss & Optimizers",
+    q: "Before any training, what loss value would you expect <code>CrossEntropyLoss</code> to produce on a random, untrained model predicting MNIST?",
+    options: [
+      "0.0 — no training has happened yet so there's nothing to penalize",
+      "≈ 2.30 — the log of the number of classes (log 10 ≈ 2.30)",
+      "1.0 — the standard baseline for any classification task",
+      "10.0 — one per class"
+    ],
+    answer: 1,
+    explanation: "<strong>Random baseline loss ≈ ln(10) ≈ 2.30.</strong> A random model assigns equal probability (1/10 = 0.1) to each of the 10 digit classes. Cross-entropy for the true class is −log(0.1) = log(10) ≈ 2.303. Your README explicitly lists this as the Phase 3 checkpoint: 'Initial loss ≈ 2.30 (random baseline)'. If your initial loss is far from this, something is wrong with your model or loss function setup."
+  },
+  {
+    topic: "Evaluation",
+    q: "In <code>eval.py</code>, why is <code>torch.no_grad()</code> used during evaluation?",
+    options: [
+      "To disable the model so it doesn't update weights during evaluation",
+      "To tell PyTorch not to build a computation graph, saving memory and making inference faster since gradients aren't needed",
+      "To prevent the confusion matrix from being affected by gradient values",
+      "To freeze the batch normalization layers"
+    ],
+    answer: 1,
+    explanation: "<strong><code>no_grad()</code> skips computation graph construction.</strong> During training, PyTorch records every operation on tensors so it can run backpropagation later. This bookkeeping uses memory and takes time. During evaluation you never call <code>loss.backward()</code>, so the graph is useless. Wrapping the eval loop in <code>torch.no_grad()</code> tells PyTorch not to bother tracking operations — which is faster and uses less GPU memory. Your <code>eval.py</code> uses it exactly for this reason."
+  },
+  {
+    topic: "Evaluation",
+    q: "The confusion matrix in <code>eval.py</code> is a 10×10 grid. What do the values on the diagonal represent vs. the off-diagonal values?",
+    options: [
+      "Diagonal = wrong predictions; off-diagonal = correct predictions",
+      "Diagonal = correct predictions (true label = predicted label); off-diagonal = errors (which digits get confused with which)",
+      "Diagonal = training accuracy; off-diagonal = test accuracy",
+      "Diagonal = the count of each digit in the test set"
+    ],
+    answer: 1,
+    explanation: "<strong>Diagonal = correct; off-diagonal = confusion.</strong> Entry (i, j) in the matrix is the count of images whose true label was digit <em>i</em> but the model predicted digit <em>j</em>. When i = j (the diagonal) the prediction was right. Off-diagonal entries reveal systematic errors — e.g., a large value at (4, 9) means the model often mistakes 4s for 9s. This is far more informative than a single accuracy number and points directly at where the model needs improvement."
+  },
+  {
+    topic: "Training Loop",
+    q: "What does <code>model.train()</code> do, and why should you call <code>model.eval()</code> before running evaluation?",
+    options: [
+      "<code>train()</code> starts gradient computation; <code>eval()</code> stops it permanently",
+      "They control dropout and batch normalization behaviour — some layers behave differently in training vs inference mode",
+      "<code>train()</code> loads weights from disk; <code>eval()</code> saves them",
+      "They change the loss function between cross-entropy (training) and accuracy (evaluation)"
+    ],
+    answer: 1,
+    explanation: "<strong>These flags toggle layer behaviour, not gradients.</strong> Layers like <code>nn.Dropout</code> randomly zero out neurons during training (to regularize) but pass all values through at eval time. <code>nn.BatchNorm</code> uses running statistics in eval mode instead of per-batch statistics. Your current models (MLP and CNN) don't have either — but calling <code>model.train()</code> and <code>model.eval()</code> anyway is correct practice that makes code future-proof when you add those layers. Gradients are controlled separately by <code>torch.no_grad()</code>."
+  }
+];
+
+let current = 0;
+let score = { correct: 0, wrong: 0 };
+let answered = [];
+let order = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  order = shuffle([...Array(QUESTIONS.length).keys()]);
+  current = 0;
+  score = { correct: 0, wrong: 0 };
+  answered = new Array(QUESTIONS.length).fill(null);
+
+  document.getElementById('intro-screen').style.display = 'none';
+  document.getElementById('results-screen').classList.remove('show');
+  document.getElementById('quiz-screen').style.display = 'block';
+
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const qi = order[current];
+  const q = QUESTIONS[qi];
+  const total = QUESTIONS.length;
+
+  // Progress
+  document.getElementById('q-counter').textContent = `Question ${current + 1} of ${total}`;
+  const pct = Math.round((current / total) * 100);
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Score chips
+  document.getElementById('chip-correct').textContent = `✓ ${score.correct}`;
+  document.getElementById('chip-wrong').textContent = `✗ ${score.wrong}`;
+  document.getElementById('chip-remaining').textContent = `${total - current} left`;
+
+  // Question
+  document.getElementById('q-topic').textContent = q.topic;
+  document.getElementById('q-text').innerHTML = q.q;
+
+  // Options
+  const letters = ['A', 'B', 'C', 'D'];
+  const optEl = document.getElementById('q-options');
+  optEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i, qi);
+    optEl.appendChild(btn);
+  });
+
+  // Explanation
+  const exp = document.getElementById('q-explanation');
+  exp.className = 'explanation';
+  exp.innerHTML = '';
+
+  // If already answered (going back isn't supported but future-proofs)
+  if (answered[current] !== null) {
+    applyAnswerState(qi, answered[current]);
+  }
+
+  // Buttons
+  document.getElementById('btn-next').disabled = (answered[current] === null);
+  document.getElementById('btn-restart').style.display = 'none';
+}
+
+function selectAnswer(chosen, qi) {
+  if (answered[current] !== null) return; // already answered
+  answered[current] = chosen;
+
+  const q = QUESTIONS[qi];
+  const isCorrect = chosen === q.answer;
+
+  if (isCorrect) score.correct++;
+  else score.wrong++;
+
+  applyAnswerState(qi, chosen);
+  document.getElementById('btn-next').disabled = false;
+
+  // Update chips
+  document.getElementById('chip-correct').textContent = `✓ ${score.correct}`;
+  document.getElementById('chip-wrong').textContent = `✗ ${score.wrong}`;
+}
+
+function applyAnswerState(qi, chosen) {
+  const q = QUESTIONS[qi];
+  const isCorrect = chosen === q.answer;
+  const buttons = document.querySelectorAll('.option-btn');
+
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.answer) btn.classList.add('correct-ans');
+    else if (i === chosen && !isCorrect) btn.classList.add('wrong-ans');
+  });
+
+  const exp = document.getElementById('q-explanation');
+  exp.innerHTML = q.explanation;
+  exp.className = `explanation show ${isCorrect ? 'correct-exp' : 'wrong-exp'}`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= QUESTIONS.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const rs = document.getElementById('results-screen');
+  rs.classList.add('show');
+
+  const pct = Math.round((score.correct / QUESTIONS.length) * 100);
+  document.getElementById('final-score').textContent = `${score.correct}/${QUESTIONS.length}`;
+
+  let msg, sub;
+  if (pct >= 90) { msg = "Strong grasp of the fundamentals."; sub = "You understand the loop, the architecture, and why each piece exists."; }
+  else if (pct >= 70) { msg = "Solid foundation with a few gaps."; sub = "Review the explanations for what you missed, then try again."; }
+  else if (pct >= 50) { msg = "Getting there — keep digging."; sub = "Go back to the code comments in model.py and train.py for the concepts that tripped you up."; }
+  else { msg = "More review needed."; sub = "Read through the model.py and train.py comments carefully before retrying."; }
+
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-sub').textContent = sub;
+
+  // Breakdown
+  const bd = document.getElementById('breakdown');
+  bd.innerHTML = '';
+  order.forEach((qi, idx) => {
+    const q = QUESTIONS[qi];
+    const a = answered[idx];
+    const ok = a === q.answer;
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = `
+      <span class="bd-icon">${ok ? '✅' : '❌'}</span>
+      <span class="bd-q">${q.q.replace(/<[^>]+>/g, '').substring(0, 80)}…</span>
+      <span class="bd-tag">${q.topic}</span>
+    `;
+    bd.appendChild(row);
+  });
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+</script>
+</body>
+</html>
